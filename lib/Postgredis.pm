@@ -1,7 +1,7 @@
 package Postgredis;
 
 use Mojo::Pg;
-use Mojo::Base qw/-base/;
+use v5.20;
 use experimental 'signatures';
 use strict;
 
@@ -14,18 +14,26 @@ our $VERSION=0.01;
 #       3. -parallel scaling across machines harder
 #
 $ENV{PG_CONNECT} //= 'postgresql:///default';
-has _pg => sub { state $db //= Mojo::Pg->new( $ENV{PG_CONNECT} // die "set PG_CONNECT") };
-has pg => sub { shift->_pg->db; };
-has namespace => sub { die "no namespace" };
 
 sub new {
     my $s = shift;
     my @a = @_;
     my %args;
     %args = ( namespace => $_[0] ) if @_==1;
-    my $t = $s->SUPER::new(%args);
-    $t;
+    bless \%args, $s;
 }
+
+sub namespace($s,$new=undef) {
+    $s->{namespace} = $new if @_==2;
+    $s->{namespace};
+}
+
+sub _pg($s) {
+    state $db //= Mojo::Pg->new( $ENV{PG_CONNECT} // die "set PG_CONNECT");
+    $db;
+}
+
+sub pg($s) { $s->_pg->db; }
 
 sub migrations($s) {
     my $table = $s->namespace;

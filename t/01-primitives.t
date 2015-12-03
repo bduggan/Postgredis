@@ -5,7 +5,7 @@ use Postgredis;
 
 $ENV{PG_CONNECT} = "postgresql:///test";
 
-my $db = Postgredis->new('test123')->flushdb;
+my $db = Postgredis->new('test99')->flushdb;
 
 # Keys
 ok $db->set("hi","there");
