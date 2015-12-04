@@ -181,7 +181,8 @@ sub zrem($s,$key,$val) {
 
 sub zrangebyscore($s,$key,$min,$max) {
     return $s->query("select jv from redis_sorted where key = ? and score >= ?
-        and score <= ? order by score, jv::text", $key, $min, $max)->expand->arrays->flatten->to_array;
+        and score <= ? order by score, jv::text", $key, $min, $max)
+    ->expand->arrays->flatten;
 }
 
 1;
