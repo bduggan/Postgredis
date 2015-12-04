@@ -34,11 +34,13 @@ ok !$db->exists("hi:3");
 ok $db->set("hello", { world => 42 });
 is_deeply($db->get("hello"), { world => 42 } );
 
-# Strings needing quoting
+# More values
 for my $str (
     q[don't],
     q[xx"zz],
-    q[zz\\z]
+    q[zz\\z],
+    q[rêsumé],
+    q[♠	♡ ♢ ♣],
 ) {
     ok $db->set(val => $str);
     is $db->get(val), $str;
