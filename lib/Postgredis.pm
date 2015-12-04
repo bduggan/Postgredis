@@ -13,7 +13,6 @@ our $VERSION=0.01;
 #       2. +native JSON (jsonb) type
 #       3. -parallel scaling across machines harder
 #
-$ENV{PG_CONNECT} //= 'postgresql:///default';
 
 sub new {
     my $s = shift;
@@ -29,7 +28,11 @@ sub namespace($s,$new=undef) {
 }
 
 sub _pg($s) {
-    state $db //= Mojo::Pg->new( $ENV{PG_CONNECT} // die "set PG_CONNECT");
+    state $db;
+    return $db if defined($db);
+    $db = Mojo::Pg->new;
+    $ENV{PG_CONNECT_STR} and do { $db = $db->from_string( $ENV{PG_CONNECT_STR} ) };
+    $ENV{PG_CONNECT_DSN} and do { $db = $db->dsn($ENV{PG_CONNECT_DSN}) };
     $db;
 }
 

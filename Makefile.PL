@@ -17,6 +17,7 @@ WriteMakefile(
     BUILD_REQUIRES => {
         'Test::More' => 0,
         'Mojo::Pg' => 0,
+        'Test::PostgreSQL' => 0,
     },
     PREREQ_PM => {
         #'ABC'              => 1.6,

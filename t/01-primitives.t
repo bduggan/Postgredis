@@ -2,10 +2,15 @@
 
 use Test::More;
 use Postgredis;
+use Test::PostgreSQL;
 
-$ENV{PG_CONNECT} = "postgresql:///test";
+my $psql = Test::PostgreSQL->new() or plan
+    skip_all => $test::postgresql::errstr;
 
-my $db = Postgredis->new('test99')->flushdb;
+$ENV{PG_CONNECT_STR} = "postgresql:///test";
+$ENV{PG_CONNECT_DSN} = $psql->dsn;
+
+my $db = Postgredis->new('test_namespace')->flushdb;
 
 # Keys
 ok $db->set("hi","there");
