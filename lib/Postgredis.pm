@@ -47,7 +47,9 @@ DONE
     primary key (key, jv)
     )
 DONE
-    # TODO index on score
+    $s->query(<<DONE);
+    create index on $table\_sorted (key,score)
+DONE
 }
 
 sub _drop_tables($s) {
@@ -179,7 +181,7 @@ sub zrem($s,$key,$val) {
 
 sub zrangebyscore($s,$key,$min,$max) {
     return $s->query("select jv from redis_sorted where key = ? and score >= ?
-        and score <= ? order by score", $key, $min, $max)->expand->arrays->flatten->to_array;
+        and score <= ? order by score, jv::text", $key, $min, $max)->expand->arrays->flatten->to_array;
 }
 
 1;
