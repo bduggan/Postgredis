@@ -7,13 +7,6 @@ use strict;
 
 our $VERSION=0.01;
 
-# Notes:
-# comparison to redis
-#       1. +no need to manually maintain indexes.
-#       2. +native JSON (jsonb) type
-#       3. -parallel scaling across machines harder
-#
-
 sub new {
     my $s = shift;
     my @a = @_;
