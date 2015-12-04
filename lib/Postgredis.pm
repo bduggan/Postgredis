@@ -80,21 +80,11 @@ sub flushdb($s) {
 
 sub default_ttl { }
 
-sub _auto_json($s,$value) {
-    # Turn scalars into json unless they are encloed in {} or []
-    return {json => $value} if ref $value;
-    return $value if $value =~ /^\{.*\}$/;
-    return $value if $value =~ /^\[.*\]$/;
-    $value =~ s/"/\\"/g;
-    return qq["$value"]
-}
-
 sub set($s,$key,$value) {
   my $res;
-  $value = $s->_auto_json($value);
-  $res = $s->query("update redis set jv = ?::jsonb where key = ?", $value, $key);
+  $res = $s->query("update redis set jv = ?::jsonb where key = ?", { json => $value }, $key);
   return 1 if $res->rows > 0;
-  $s->query("insert into redis (key, jv) values (?,?::jsonb)", $key, $value);
+  $s->query("insert into redis (key, jv) values (?,?::jsonb)", $key, { json => $value } );
   return 1;
 }
 

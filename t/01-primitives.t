@@ -34,6 +34,16 @@ ok !$db->exists("hi:3");
 ok $db->set("hello", { world => 42 });
 is_deeply($db->get("hello"), { world => 42 } );
 
+# Strings needing quoting
+for my $str (
+    q[don't],
+    q[xx"zz],
+    q[zz\\z]
+) {
+    ok $db->set(val => $str);
+    is $db->get(val), $str;
+}
+
 # Hashes
 ok $db->hset("good","night","moon");
 is $db->hget("good","night"), "moon";
@@ -41,7 +51,7 @@ is_deeply $db->hgetall("good"),{ night => "moon" };
 ok $db->hdel("good","night");
 
 # Sets
-for my $i (1..5) {
+for my $i (5,4,2,1,3) {
     ok $db->sadd('nums',$i);
 }
 is_deeply [ sort @{ $db->smembers('nums')} ], [1..5];
