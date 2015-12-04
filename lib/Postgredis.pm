@@ -43,7 +43,6 @@ sub _create_table($s) {
     $s->query(<<DONE);
 create table $table (
     key varchar not null primary key,
-    value varchar,
     jv jsonb
 )
 DONE
@@ -70,6 +69,7 @@ sub query($s,$str, @more) {
 
 sub maybe_init($s) {
 	$s->flushdb unless $s->_table_exists;
+    $s;
 }
 
 sub flushdb($s) {
@@ -80,17 +80,25 @@ sub flushdb($s) {
 
 sub default_ttl { }
 
+sub _auto_json($s,$value) {
+    # Turn scalars into json unless they are encloed in {} or []
+    return $value if $value =~ /^\{.*\}$/;
+    return $value if $value =~ /^\[.*\]$/;
+    $value =~ s/"/\\"/g;
+    return qq["$value"]
+}
+
 sub set($s,$key,$value) {
   my $res;
-  my $column = $value =~ /^\{.*\}$/ ? 'jv' : 'value';
-  $res = $s->query("update redis set $column = ? where key = ?", $value, $key);
+  $value = $s->_auto_json($value);
+  $res = $s->query("update redis set jv = ?::jsonb where key = ?", $value, $key);
   return 1 if $res->rows > 0;
-  $s->query("insert into redis (key, $column) values (?,?)", $key, $value);
+  $s->query("insert into redis (key, jv) values (?,?::jsonb)", $key, $value);
   return 1;
 }
 
 sub get($s,$k) {
-    return $s->query("select value from redis where key=?",$k)->array->[0];
+    return $s->query("select jv from redis where key=?",$k)->expand->array->[0];
 }
 
 sub del($s,$k) {
