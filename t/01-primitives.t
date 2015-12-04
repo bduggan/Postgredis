@@ -14,7 +14,7 @@ if ($ENV{TEST_PG_CONNECT_STR}) {
     $ENV{PG_CONNECT_DSN} = $psql->dsn;
 }
 
-my $db = Postgredis->new('test_namespace')->maybe_init;
+my $db = Postgredis->new('test_namespace')->flushdb;
 
 # Keys
 ok $db->set("hi","there");
@@ -59,13 +59,13 @@ ok $db->srem("nums",3);
 is_deeply [ sort @{ $db->smembers('nums')} ], [1,2,4,5];
 
 # Sorted sets
-ok $db->zadd(letters => ('c', 10));
-ok $db->zadd(letters => ('d', 5));
-ok $db->zadd(letters => ('a', 1));
-is $db->zscore(letters => 'a'), 1;
-is $db->zscore(letters => 'c'), 10;
-is $db->zscore(letters => 'd'), 5;
-is_deeply $db->zrangebyscore('letters', 2, 20), ['d','c'];
+ok $db->zadd(letters => ('c', 10)), 'zadd';
+ok $db->zadd(letters => ('d', 5)), 'zadd';
+ok $db->zadd(letters => ('a', 1)), 'zadd';
+is $db->zscore(letters => 'a'), 1, 'zscore';
+is $db->zscore(letters => 'c'), 10, 'zscore';
+is $db->zscore(letters => 'd'), 5, 'zscore';
+is_deeply $db->zrangebyscore('letters', 2, 20), ['d','c'], 'zrangebyscore';
 ok $db->zrem(letters => 'a');
 ok $db->zrem(letters => 'c');
 

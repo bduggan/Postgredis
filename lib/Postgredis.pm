@@ -31,24 +31,32 @@ sub _pg($s) {
 
 sub pg($s) { $s->_pg->db; }
 
-sub _create_table($s) {
+sub _create_tables($s) {
     my $table = $s->namespace;
     $s->query(<<DONE);
-create table $table (
-    key varchar not null primary key,
-    jv jsonb
-)
+    create table $table (
+        key varchar not null primary key,
+        jv jsonb
+    )
 DONE
-}
-
-sub _drop_table($s) {
-    my $table = $s->namespace;
     $s->query(<<DONE);
-drop table if exists $table;
+    create table $table\_sorted (
+        key varchar not null,
+        jv jsonb not null,
+        score integer not null,
+    primary key (key, jv)
+    )
 DONE
+    # TODO index on score
 }
 
-sub _table_exists($s) {
+sub _drop_tables($s) {
+    my $table = $s->namespace;
+    $s->query("drop table if exists $table");
+    $s->query("drop table if exists $table\_sorted");
+}
+
+sub _tables_exist($s) {
     my $res = $s->query(q[select 1 from information_schema.tables where table_name = ?],
 		$s->namespace);
 	return $res->rows > 0;
@@ -57,17 +65,18 @@ sub _table_exists($s) {
 sub query($s,$str, @more) {
     my $namespace = $s->namespace;
     $str =~ s/\bredis\b/$namespace/;
+    $str =~ s/\bredis_sorted\b/$namespace\_sorted/;
     return $s->pg->query($str, @more);
 }
 
 sub maybe_init($s) {
-	$s->flushdb unless $s->_table_exists;
+	$s->flushdb unless $s->_tables_exist;
     $s;
 }
 
 sub flushdb($s) {
-    $s->_drop_table if $s->_table_exists;
-    $s->_create_table;
+    $s->_drop_tables if $s->_tables_exist;
+    $s->_create_tables;
     return $s;
 }
 
@@ -154,25 +163,23 @@ sub incr($s,$k) {
     return $next->[0];
 }
 
-sub zadd($s,$key,$k,$score) {
-    # todo: make an index using jsonb + gin
-    $s->hset($key,$k,$score);
+sub zadd($s,$key,$val,$score) {
+    $s->query("insert into redis_sorted (key,score,jv) values (?,?,?::jsonb)",
+        $key, $score,{ json => $val });
 }
 
-sub zscore($s,$key,$k) {
-    $s->hget($key,$k);
+sub zscore($s,$key,$val) {
+    return $s->query("select score from redis_sorted where key = ? and jv = ?::jsonb",
+        $key, { json => $val })->array->[0];
 }
 
-sub zrem($s,$key,$k) {
-    $s->hdel($key, $k)
+sub zrem($s,$key,$val) {
+    $s->query("delete from redis_sorted where key = ? and jv = ?::jsonb", $key, { json => $val } );
 }
 
 sub zrangebyscore($s,$key,$min,$max) {
-    # TODO optimize and use index and avoid sort
-    my $j = $s->hgetall($key);
-    my @sorted = sort { $j->{$a} <=> $j->{$b} } CORE::keys %$j;
-    my @ok = grep { $j->{$_} >= $min && $j->{$_} <= $max } @sorted;
-    return \@ok;
+    return $s->query("select jv from redis_sorted where key = ? and score >= ?
+        and score <= ? order by score", $key, $min, $max)->expand->arrays->flatten->to_array;
 }
 
 1;
