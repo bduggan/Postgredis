@@ -38,18 +38,28 @@ sub _pg($s) {
 
 sub pg($s) { $s->_pg->db; }
 
-sub migrations($s) {
+sub _create_table($s) {
     my $table = $s->namespace;
-    return $s->_pg->migrations->from_string(<<DONE);
--- 1 up
+    $s->query(<<DONE);
 create table $table (
     key varchar not null primary key,
     value varchar,
     jv jsonb
-);
--- 1 down
+)
+DONE
+}
+
+sub _drop_table($s) {
+    my $table = $s->namespace;
+    $s->query(<<DONE);
 drop table if exists $table;
 DONE
+}
+
+sub _table_exists($s) {
+    my $res = $s->query(q[select 1 from information_schema.tables where table_name = ?],
+		$s->namespace);
+	return $res->rows > 0;
 }
 
 sub query($s,$str, @more) {
@@ -59,15 +69,12 @@ sub query($s,$str, @more) {
 }
 
 sub maybe_init($s) {
-    my $res = $s->query(q[select 1 from information_schema.tables where table_name = ?],
-		$s->namespace);
-	return $s if $res->rows > 0;
-	$s->flushdb;
+	$s->flushdb unless $s->_table_exists;
 }
 
 sub flushdb($s) {
-    $s->migrations->migrate(0);
-    $s->migrations->migrate;
+    $s->_drop_table if $s->_table_exists;
+    $s->_create_table;
     return $s;
 }
 

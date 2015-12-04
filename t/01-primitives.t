@@ -4,13 +4,17 @@ use Test::More;
 use Postgredis;
 use Test::PostgreSQL;
 
-my $psql = Test::PostgreSQL->new() or plan
-    skip_all => $test::postgresql::errstr;
+my $psql;
+if ($ENV{TEST_PG_CONNECT_STR}) {
+    $ENV{PG_CONNECT_STR} = $ENV{TEST_PG_CONNECT_STR};
+} else {
+    $psql = Test::PostgreSQL->new() or plan
+        skip_all => $test::postgresql::errstr;
+    $ENV{PG_CONNECT_STR} = "postgresql:///test";
+    $ENV{PG_CONNECT_DSN} = $psql->dsn;
+}
 
-$ENV{PG_CONNECT_STR} = "postgresql:///test";
-$ENV{PG_CONNECT_DSN} = $psql->dsn;
-
-my $db = Postgredis->new('test_namespace')->flushdb;
+my $db = Postgredis->new('test_namespace')->maybe_init;
 
 # Keys
 ok $db->set("hi","there");
