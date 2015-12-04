@@ -30,6 +30,10 @@ ok !$db->exists("hi9");
 ok $db->del("hi:3");
 ok !$db->exists("hi:3");
 
+# JSON values
+ok $db->set("hello", { world => 42 });
+is_deeply($db->get("hello"), { world => 42 } );
+
 # Hashes
 ok $db->hset("good","night","moon");
 is $db->hget("good","night"), "moon";

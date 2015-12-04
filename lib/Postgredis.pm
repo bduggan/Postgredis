@@ -82,6 +82,7 @@ sub default_ttl { }
 
 sub _auto_json($s,$value) {
     # Turn scalars into json unless they are encloed in {} or []
+    return {json => $value} if ref $value;
     return $value if $value =~ /^\{.*\}$/;
     return $value if $value =~ /^\[.*\]$/;
     $value =~ s/"/\\"/g;
