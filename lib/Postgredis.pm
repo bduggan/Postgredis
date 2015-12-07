@@ -35,20 +35,20 @@ sub _create_tables($s) {
     my $table = $s->namespace;
     $s->query(<<DONE);
     create table $table (
-        key varchar not null primary key,
-        jv jsonb
+        k varchar not null primary key,
+        v jsonb
     )
 DONE
     $s->query(<<DONE);
     create table $table\_sorted (
-        key varchar not null,
-        jv jsonb not null,
+        k varchar not null,
+        v jsonb not null,
         score integer not null,
-    primary key (key, jv)
+    primary key (k, v)
     )
 DONE
     $s->query(<<DONE);
-    create index on $table\_sorted (key,score)
+    create index on $table\_sorted (k,score)
 DONE
 }
 
@@ -86,56 +86,56 @@ sub default_ttl { }
 
 sub set($s,$key,$value) {
   my $res;
-  $res = $s->query("update redis set jv = ?::jsonb where key = ?", { json => $value }, $key);
+  $res = $s->query("update redis set v = ?::jsonb where k = ?", { json => $value }, $key);
   return 1 if $res->rows > 0;
-  $s->query("insert into redis (key, jv) values (?,?::jsonb)", $key, { json => $value } );
+  $s->query("insert into redis (k, v) values (?,?::jsonb)", $key, { json => $value } );
   return 1;
 }
 
 sub get($s,$k) {
-    return $s->query("select jv from redis where key=?",$k)->expand->array->[0];
+    return $s->query("select v from redis where k=?",$k)->expand->array->[0];
 }
 
 sub del($s,$k) {
-    $s->query("delete from redis where key=?",$k);
+    $s->query("delete from redis where k=?",$k);
 }
 
 sub keys($s,$pat) {
     $pat =~ s/\*/%/g;
-    return $s->query("select key from redis where key like ?",$pat)->arrays->flatten;
+    return $s->query("select k from redis where k like ?",$pat)->arrays->flatten;
 }
 
 sub exists($s,$k) {
-    my $got = $s->query("select * from redis where key=?",$k);
+    my $got = $s->query("select * from redis where k=?",$k);
     return $got->rows > 0;
 }
 
 sub hset($s,$key,$hkey,$value) {
-    my $res = $s->query("select jv from redis where key = ?", $key)->expand;
-    my $json = $res->rows ? $res->hash->{jv} : {};
+    my $res = $s->query("select v from redis where k = ?", $key)->expand;
+    my $json = $res->rows ? $res->hash->{v} : {};
     $json->{$hkey} = $value;
-    $res = $s->query("update redis set jv = ?::jsonb where key = ?",{json=>$json},$key);
+    $res = $s->query("update redis set v = ?::jsonb where k = ?",{json=>$json},$key);
     return 1 if $res->rows > 0;
-    $res = $s->query("insert into redis (key, jv) values (?,?::jsonb)",$key, {json=>$json});
+    $res = $s->query("insert into redis (k, v) values (?,?::jsonb)",$key, {json=>$json});
     return 1;
 }
 
 sub hdel($s,$key,$hkey) {
-    my $json = $s->query("select jv from redis where key = ?", $key)->expand->hash->{jv};
+    my $json = $s->query("select v from redis where k = ?", $key)->expand->hash->{v};
     exists($json->{$hkey}) or return 0;
     delete $json->{$hkey} or return 0;
-    $s->query("update redis set jv = ?::jsonb where key = ?",{json=>$json},$key);
+    $s->query("update redis set v = ?::jsonb where k = ?",{json=>$json},$key);
 }
 
 sub hget($s,$key,$hkey) {
-    my $json = $s->query("select jv from redis where key = ?", $key)->expand->hash->{jv};
+    my $json = $s->query("select v from redis where k = ?", $key)->expand->hash->{v};
     return $json->{$hkey};
 }
 
 sub hgetall($s,$key) {
-    my $res = $s->query("select jv from redis where key = ?", $key)->expand;
+    my $res = $s->query("select v from redis where k = ?", $key)->expand;
     return {} unless $res->rows;
-    return $res->hash->{jv};
+    return $res->hash->{v};
 }
 
 sub sadd($s,$key,$value) {
@@ -143,10 +143,10 @@ sub sadd($s,$key,$value) {
 }
 
 sub srem($s,$key,$value) {
-    my $json = $s->query("select jv from redis where key = ?", $key)->expand->hashes;
-    $json &&= $json->[0]{jv};
+    my $json = $s->query("select v from redis where k = ?", $key)->expand->hashes;
+    $json &&= $json->[0]{v};
     delete $json->{$value};
-    $s->query("update redis set jv = ?::jsonb where key = ?",{json=>$json},$key);
+    $s->query("update redis set v = ?::jsonb where k = ?",{json=>$json},$key);
     return 1;
 }
 
@@ -166,22 +166,22 @@ sub incr($s,$k) {
 }
 
 sub zadd($s,$key,$val,$score) {
-    $s->query("insert into redis_sorted (key,score,jv) values (?,?,?::jsonb)",
+    $s->query("insert into redis_sorted (k,score,v) values (?,?,?::jsonb)",
         $key, $score,{ json => $val });
 }
 
 sub zscore($s,$key,$val) {
-    return $s->query("select score from redis_sorted where key = ? and jv = ?::jsonb",
+    return $s->query("select score from redis_sorted where k = ? and v = ?::jsonb",
         $key, { json => $val })->array->[0];
 }
 
 sub zrem($s,$key,$val) {
-    $s->query("delete from redis_sorted where key = ? and jv = ?::jsonb", $key, { json => $val } );
+    $s->query("delete from redis_sorted where k = ? and v = ?::jsonb", $key, { json => $val } );
 }
 
 sub zrangebyscore($s,$key,$min,$max) {
-    return $s->query("select jv from redis_sorted where key = ? and score >= ?
-        and score <= ? order by score, jv::text", $key, $min, $max)
+    return $s->query("select v from redis_sorted where k = ? and score >= ?
+        and score <= ? order by score, v::text", $key, $min, $max)
     ->expand->arrays->flatten;
 }
 
