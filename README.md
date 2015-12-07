@@ -1,5 +1,7 @@
 Postgredis
 
+[![Build Status](https://travis-ci.org/bduggan/Postgredis.svg?branch=master)](https://travis-ci.org/bduggan/Postgredis)
+
 Postgredis is a Postgres-Redis mashup written in Perl.
 
 INSTALLATION
