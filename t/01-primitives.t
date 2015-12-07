@@ -5,7 +5,9 @@ use Postgredis;
 use Test::PostgreSQL;
 
 my $psql;
-if ($ENV{TEST_PG_CONNECT_STR}) {
+if ($ENV{TRAVIS}) {
+    $ENV{PG_CONNECT_STR} = "postgresql:///travis_ci_test";
+elsif ($ENV{TEST_PG_CONNECT_STR}) {
     $ENV{PG_CONNECT_STR} = $ENV{TEST_PG_CONNECT_STR};
 } else {
     $psql = Test::PostgreSQL->new() or plan
