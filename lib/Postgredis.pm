@@ -187,3 +187,19 @@ sub zrangebyscore($s,$key,$min,$max) {
 
 1;
 
+=head1 NAME
+
+Postgredis -- PostgreSQL and Redis mashup
+
+=head1 SYNOPSIS
+
+     my $db = Postgredis->new('test');
+     $db->set(favorite_color => "blue");
+     $db->hset("joe", name => "Joe", age => 50 );
+
+=head1 DESCRIPTION
+
+Postgredis is an experimental implementation of a small subset of the
+Redis primitives using Postgres.
+
+=cut
