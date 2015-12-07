@@ -47,18 +47,20 @@ for my $str (
 }
 
 # Hashes
-ok $db->hset("good","night","moon");
-is $db->hget("good","night"), "moon";
-is_deeply $db->hgetall("good"),{ night => "moon" };
-ok $db->hdel("good","night");
+ok $db->hset("good",night => "moon"), "hset";
+ok $db->hset("bad",moon => "rising"), "hset";
+is $db->hget("good","night"), "moon", "hget";
+is $db->hget("bad","moon"), "rising", "hget";
+is_deeply $db->hgetall("good"),{ night => "moon" }, "hgetall";
+ok $db->hdel("good","night"), "hdel";
 
 # Sets
 for my $i (5,4,2,1,3) {
-    ok $db->sadd('nums',$i);
+    ok $db->sadd('nums',$i), "sadd";
 }
-is_deeply [ sort @{ $db->smembers('nums')} ], [1..5];
-ok $db->srem("nums",3);
-is_deeply [ sort @{ $db->smembers('nums')} ], [1,2,4,5];
+is_deeply [ sort @{ $db->smembers('nums')} ], [1..5], "smembers";
+ok $db->srem("nums",3), "srem";
+is_deeply [ sort @{ $db->smembers('nums')} ], [1,2,4,5], "smembers";
 
 # Sorted sets
 ok $db->zadd(letters => ('c', 10)), 'zadd';
@@ -68,15 +70,15 @@ is $db->zscore(letters => 'a'), 1, 'zscore';
 is $db->zscore(letters => 'c'), 10, 'zscore';
 is $db->zscore(letters => 'd'), 5, 'zscore';
 is_deeply $db->zrangebyscore('letters', 2, 20), ['d','c'], 'zrangebyscore';
-ok $db->zrem(letters => 'a');
-ok $db->zrem(letters => 'c');
+ok $db->zrem(letters => 'a'), "zrem";
+ok $db->zrem(letters => 'c'), "zrem";
 
 # Counters
 my $start = $db->incr("countme");
-is $db->incr("countme"), $start + 1;
-is $db->incr("countme"), $start + 2;
+is $db->incr("countme"), $start + 1, "incr";
+is $db->incr("countme"), $start + 2, "incr";
 my $nother = $db->incr("countme2");
-is $db->incr("countme2"), $nother + 1;
+is $db->incr("countme2"), $nother + 1, "incr";
 
 done_testing();
 
