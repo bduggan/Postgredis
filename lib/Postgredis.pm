@@ -43,7 +43,7 @@ DONE
     create table $table\_sorted (
         k varchar not null,
         v jsonb not null,
-        score integer not null,
+        score real not null,
     primary key (k, v)
     )
 DONE

@@ -65,15 +65,21 @@ ok $db->srem("nums",3), "srem";
 is_deeply [ sort @{ $db->smembers('nums')} ], [1,2,4,5], "smembers";
 
 # Sorted sets
-ok $db->zadd(letters => ('c', 10)), 'zadd';
-ok $db->zadd(letters => ('d', 5)), 'zadd';
-ok $db->zadd(letters => ('a', 1)), 'zadd';
+ok $db->zadd(letters => (c => 10)), 'zadd';
+ok $db->zadd(letters => (d => 5)), 'zadd';
+ok $db->zadd(letters => (a => 1)), 'zadd';
 is $db->zscore(letters => 'a'), 1, 'zscore';
 is $db->zscore(letters => 'c'), 10, 'zscore';
 is $db->zscore(letters => 'd'), 5, 'zscore';
 is_deeply $db->zrangebyscore('letters', 2, 20), ['d','c'], 'zrangebyscore';
 ok $db->zrem(letters => 'a'), "zrem";
 ok $db->zrem(letters => 'c'), "zrem";
+
+# Sorted sets, real numbers
+ok $db->zadd(pi => second => 3.21), 'zadd';
+ok $db->zadd(pi => first => 3.14), 'zadd';
+ok $db->zadd(pi => third => 3.21), 'zadd';
+is_deeply $db->zrangebyscore('pi', 1, 4), [qw/first second third/], 'zrangebyscore';
 
 # Counters
 my $start = $db->incr("countme");
