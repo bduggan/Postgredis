@@ -262,4 +262,8 @@ Postgres as a backend is a compromise between the two.
 
 L<RedisDB>, L<Mojo::Pg>
 
+=head1 AUTHOR
+
+Brian Duggan C<bduggan@cpan.org>
+
 =cut
