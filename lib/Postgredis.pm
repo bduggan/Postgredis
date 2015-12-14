@@ -189,7 +189,7 @@ sub zrangebyscore($s,$key,$min,$max) {
 
 =head1 NAME
 
-Postgredis -- PostgreSQL and Redis mashup!
+Postgredis -- PostgreSQL and Redis mashup
 
 =head1 SYNOPSIS
 
