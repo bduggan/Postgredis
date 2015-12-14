@@ -165,7 +165,7 @@ sub incr($s,$k) {
     return $next->[0];
 }
 
-sub zadd($s,$key,$val,$score) {
+sub zadd($s,$key,$score,$val) {
     $s->_query("insert into redis_sorted (k,score,v) values (?,?,?::jsonb)",
         $key, $score,{ json => $val });
 }

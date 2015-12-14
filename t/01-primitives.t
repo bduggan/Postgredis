@@ -18,6 +18,12 @@ if ($ENV{TRAVIS}) {
 
 my $db = Postgredis->new('test_namespace')->flushdb;
 
+my $version = $db->pg->query('select version()')->array->[0];
+my ($major,$minor,$sub) = ( $version =~ m[PostgreSQL (\d+)\.(\d+).(\d+)] );
+
+plan skip_all => "need pg >= 9 ($version)" unless $major >= 9;
+plan skip_all => "need pg >= 9.4 ($version)" unless $minor >= 4;
+
 # Keys
 ok $db->set("hi","there");
 ok $db->set("hi","there");
@@ -65,9 +71,9 @@ ok $db->srem("nums",3), "srem";
 is_deeply [ sort @{ $db->smembers('nums')} ], [1,2,4,5], "smembers";
 
 # Sorted sets
-ok $db->zadd(letters => (c => 10)), 'zadd';
-ok $db->zadd(letters => (d => 5)), 'zadd';
-ok $db->zadd(letters => (a => 1)), 'zadd';
+ok $db->zadd(letters => 10 => 'c'), 'zadd';
+ok $db->zadd(letters => 5 => 'd' ), 'zadd';
+ok $db->zadd(letters => 1 => 'a'), 'zadd';
 is $db->zscore(letters => 'a'), 1, 'zscore';
 is $db->zscore(letters => 'c'), 10, 'zscore';
 is $db->zscore(letters => 'd'), 5, 'zscore';
@@ -76,9 +82,9 @@ ok $db->zrem(letters => 'a'), "zrem";
 ok $db->zrem(letters => 'c'), "zrem";
 
 # Sorted sets, real numbers
-ok $db->zadd(pi => second => 3.21), 'zadd';
-ok $db->zadd(pi => first => 3.14), 'zadd';
-ok $db->zadd(pi => third => 3.21), 'zadd';
+ok $db->zadd(pi => 3.21 => 'second'), 'zadd';
+ok $db->zadd(pi => 3.14 => 'first'), 'zadd';
+ok $db->zadd(pi => 3.21 => 'third'), 'zadd';
 is_deeply $db->zrangebyscore('pi', 1, 4), [qw/first second third/], 'zrangebyscore';
 
 # Counters
