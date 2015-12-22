@@ -23,6 +23,21 @@ my ($major,$minor,$sub) = ( $version =~ m[PostgreSQL (\d+)\.(\d+).(\d+)] );
 
 plan skip_all => "need pg >= 9 ($version)" unless $major >= 9;
 plan skip_all => "need pg >= 9.4 ($version)" unless $minor >= 4;
+diag "Testing with PostgreSQL $major.$minor.$sub";
+my $dbh = $db->pg->dbh;
+{
+    local $dbh->{PrintError} = 0;
+    local $dbh->{RaiseError} = 0;
+    my $skip = 0;
+    my $sth = $dbh->prepare("select '5'::jsonb") or BAIL_OUT $DBI::errstr;
+    $sth->execute or do { $skip = 1; };
+    if ($skip) {
+        $psql->stop;
+        plan skip_all => "No jsonb datatype in execute ($DBI::errstr).";
+    }
+    my $got = $dbh->selectall_arrayref($sth);
+    is_deeply $got, [['5']];
+}
 
 # Keys
 ok $db->set("hi","there");
