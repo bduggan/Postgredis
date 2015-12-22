@@ -1,5 +1,6 @@
 .travis.yml
 Changes
+foo.pl
 ignore.txt
 lib/Postgredis.pm
 Makefile.PL
